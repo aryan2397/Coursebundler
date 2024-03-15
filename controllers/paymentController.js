@@ -46,15 +46,6 @@ export const paymentVerification = catchAsyncError(async (req, res, next) => {
 
     const isAuthentic = generated_signature === razorpay_signature;
 
-    res.status(400).json({
-        razorpay_signature:razorpay_signature,
-        razorpay_payment_id:razorpay_payment_id,
-        razorpay_subscription_id:razorpay_subscription_id,
-        generated_signature:generated_signature,
-        subscription_id:subscription_id,
-        isAuthentic:isAuthentic
-    })
-
     if (!isAuthentic) return res.redirect(`${process.env.FRONTEND_URL}/paymentfail`);
 
     await Payment.create({

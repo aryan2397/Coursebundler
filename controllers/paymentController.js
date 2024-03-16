@@ -34,28 +34,20 @@ export const buySubscription = catchAsyncError(async (req, res, next) => {
 
 export const paymentVerification = catchAsyncError(async (req, res, next) => {
 
-    console.log("1:");
 
     const { razorpay_signature, razorpay_payment_id, razorpay_subscription_id } = req.body;
 
-    console.log("2:", razorpay_signature, razorpay_payment_id, razorpay_subscription_id);
-
     const user = await User.findById(req.user._id);
-
-    console.log("3:", user);
 
     const subscription_id = user.subscription.id;
 
-    console.log("4:", subscription_id);
-
-    const generated_signature = crypto.createHmac("sha256", process.env.RAZORPAY_API_SECRET)
+    const secretKey = process.env.RAZORPAY_API_SECRET || 'fallback_secret_key';
+    const generated_signature = crypto.createHmac("sha256", secretKey)
         .update(razorpay_payment_id + "|" + subscription_id, "utf-8").digest("hex");
 
-    console.log("5:", generated_signature);
 
     const isAuthentic = generated_signature === razorpay_signature;
 
-    console.log("6:", isAuthentic);
 
     if (!isAuthentic) return res.redirect(`${process.env.FRONTEND_URL}/paymentfail`);
 
@@ -65,15 +57,9 @@ export const paymentVerification = catchAsyncError(async (req, res, next) => {
         razorpay_subscription_id
     });
 
-    console.log("6: Saved 1");
-
     user.subscription.status = "active";
-    
-    console.log("7: Saved 2");
 
     await user.save();
-
-    console.log("7: Saved 3");
 
     res.redirect(`${process.env.FRONTEND_URL}/paymentsuccess?reference=${razorpay_payment_id}`);
 
